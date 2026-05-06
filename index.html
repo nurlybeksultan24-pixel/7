@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Шақырту — 7 Мамыр</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #fdf6ee;
+      --blush: #f2c4a8;
+      --rose: #c97b63;
+      --deep: #3b2a2a;
+      --gold: #c9a96e;
+      --glass: rgba(255,255,255,0.25);
+      --shadow: rgba(60,20,20,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--deep);
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED BACKGROUND ── */
+    .bg-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      background: linear-gradient(135deg, #fdf6ee 0%, #fce4d4 40%, #f8d6c0 70%, #fdf6ee 100%);
+      background-size: 400% 400%;
+      animation: bgShift 12s ease infinite;
+    }
+    @keyframes bgShift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(90px);
+      animation: blobMove 18s ease-in-out infinite alternate;
+      pointer-events: none; z-index: 0;
+    }
+    .blob1 { width: 480px; height: 480px; top: -120px; left: -120px; background: rgba(201,123,99,0.18); animation-delay: 0s; }
+    .blob2 { width: 360px; height: 360px; bottom: -80px; right: -80px; background: rgba(201,169,110,0.15); animation-delay: -6s; }
+    .blob3 { width: 260px; height: 260px; top: 40%; left: 55%; background: rgba(242,196,168,0.22); animation-delay: -12s; }
+    @keyframes blobMove {
+      0%   { transform: translate(0,0) scale(1); }
+      100% { transform: translate(40px,30px) scale(1.12); }
+    }
+
+    /* ── MODAL ── */
+    #modal {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-backdrop {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(253,246,238,0.92), rgba(252,228,212,0.95));
+      backdrop-filter: blur(6px);
+    }
+    .modal-card {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(201,123,99,0.22);
+      border-radius: 28px;
+      padding: 56px 52px;
+      max-width: 520px; width: 90%;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(60,20,20,0.12), 0 0 0 1px rgba(255,255,255,0.6) inset;
+      animation: cardIn 0.8s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(40px) scale(0.95); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+    .modal-icon {
+      font-size: 3rem; margin-bottom: 16px;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+    .modal-date {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.85rem; font-weight: 400; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--rose);
+      margin-bottom: 18px;
+    }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem; font-weight: 300; line-height: 1.25;
+      color: var(--deep); margin-bottom: 10px;
+    }
+    .modal-title em { font-style: italic; color: var(--rose); }
+    .modal-sub {
+      font-size: 0.92rem; color: #7a5a4e; font-weight: 300;
+      margin-bottom: 40px;
+    }
+    .modal-btns {
+      display: flex; gap: 14px; justify-content: center; align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .btn-yes {
+      padding: 14px 42px;
+      background: linear-gradient(135deg, var(--rose), #b56347);
+      color: #fff; border: none; border-radius: 50px;
+      font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500;
+      cursor: pointer; letter-spacing: 0.04em;
+      box-shadow: 0 8px 30px rgba(201,123,99,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-yes:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(201,123,99,0.5); }
+    .btn-yes:active { transform: scale(0.97); }
+
+    .btn-no {
+      padding: 14px 42px;
+      background: rgba(255,255,255,0.7);
+      color: var(--deep); border: 1px solid rgba(201,123,99,0.3); border-radius: 50px;
+      font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 400;
+      cursor: pointer; letter-spacing: 0.04em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative; /* will be moved by JS */
+      white-space: nowrap;
+    }
+
+    /* ── MAIN PAGE ── */
+    #main { display: none; position: relative; z-index: 1; min-height: 100vh; }
+    #main.visible { display: block; animation: fadeIn 1s ease both; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 80px 24px 40px;
+      text-align: center; position: relative;
+    }
+    .hero-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.78rem; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: 20px;
+      animation: slideUp 0.7s 0.2s ease both;
+    }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 300; line-height: 1.08; color: var(--deep);
+      margin-bottom: 20px;
+      animation: slideUp 0.7s 0.35s ease both;
+    }
+    .hero-title em { color: var(--rose); font-style: italic; }
+    .hero-desc {
+      font-size: 1.05rem; font-weight: 300; color: #7a5a4e; max-width: 480px;
+      line-height: 1.7; margin: 0 auto 44px;
+      animation: slideUp 0.7s 0.5s ease both;
+    }
+    .hero-badges {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      animation: slideUp 0.7s 0.65s ease both;
+    }
+    .badge {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.6); border: 1px solid rgba(201,123,99,0.2);
+      border-radius: 50px; padding: 10px 20px; font-size: 0.88rem; color: var(--deep);
+      backdrop-filter: blur(8px);
+    }
+    .badge span { font-size: 1.1rem; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+    .scroll-hint {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--rose); opacity: 0.7;
+      animation: bounceDown 2s ease-in-out infinite;
+    }
+    @keyframes bounceDown { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+
+    /* ── SECTIONS ── */
+    .section { padding: 80px 24px; max-width: 1000px; margin: 0 auto; }
+    .section-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.75rem; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 300;
+      color: var(--deep); margin-bottom: 32px;
+    }
+
+    /* ── GALLERY ── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 14px;
+    }
+    .gallery-grid .photo-slot:first-child {
+      grid-column: 1 / 3;
+      grid-row: 1;
+    }
+    .photo-slot {
+      position: relative; border-radius: 16px; overflow: hidden;
+      aspect-ratio: 1 / 1; background: rgba(242,196,168,0.25);
+      border: 2px dashed rgba(201,123,99,0.3);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .photo-slot:first-child { aspect-ratio: 4/3; }
+    .photo-slot:hover { transform: scale(1.02); box-shadow: 0 16px 48px rgba(60,20,20,0.14); }
+    .photo-slot img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.5s;
+    }
+    .photo-slot:hover img { transform: scale(1.06); }
+    .photo-overlay {
+      position: absolute; inset: 0; background: rgba(201,123,99,0.6);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s; color: #fff;
+      font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase; gap: 8px;
+    }
+    .photo-overlay .ov-icon { font-size: 2rem; }
+    .photo-slot:hover .photo-overlay { opacity: 1; }
+    .photo-placeholder {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--rose); gap: 8px; font-size: 0.85rem;
+    }
+    .photo-placeholder .ph-icon { font-size: 2.5rem; opacity: 0.5; }
+    input[type="file"] { display: none; }
+
+    /* ── INFO CARDS ── */
+    .info-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
+    }
+    .info-card {
+      background: rgba(255,255,255,0.55); border: 1px solid rgba(201,123,99,0.18);
+      border-radius: 18px; padding: 26px 22px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px var(--shadow);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .info-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px var(--shadow); }
+    .info-card .ic-icon { font-size: 1.8rem; margin-bottom: 10px; }
+    .info-card .ic-label {
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: 6px;
+    }
+    .info-card .ic-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 400; color: var(--deep);
+    }
+
+    /* ── ADDRESS ── */
+    .address-block {
+      background: linear-gradient(135deg, rgba(201,123,99,0.12), rgba(201,169,110,0.1));
+      border: 1px solid rgba(201,123,99,0.2);
+      border-radius: 22px; padding: 40px 36px;
+      display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap;
+      backdrop-filter: blur(8px);
+    }
+    .address-icon { font-size: 3rem; flex-shrink: 0; }
+    .address-text { flex: 1; min-width: 200px; }
+    .address-text h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem; font-weight: 400; color: var(--deep); margin-bottom: 10px;
+    }
+    .address-text p { font-size: 0.95rem; color: #7a5a4e; line-height: 1.7; }
+    .map-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 16px; padding: 10px 22px;
+      background: var(--rose); color: #fff; border-radius: 50px;
+      font-size: 0.84rem; text-decoration: none; letter-spacing: 0.04em;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .map-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,123,99,0.4); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 40px 24px;
+      font-size: 0.8rem; color: #b08878; letter-spacing: 0.08em;
+      border-top: 1px solid rgba(201,123,99,0.12);
+    }
+
+    /* ── EDITABLE ── */
+    [contenteditable] {
+      outline: none; cursor: text;
+      border-bottom: 1px dashed transparent;
+      transition: border-color 0.2s;
+    }
+    [contenteditable]:hover { border-bottom-color: rgba(201,123,99,0.4); }
+    [contenteditable]:focus { border-bottom-color: var(--rose); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--rose), transparent);
+      margin: 0 auto 40px;
+    }
+
+    /* ── MOBILE ── */
+    @media(max-width: 600px) {
+      .modal-card { padding: 38px 26px; }
+      .modal-title { font-size: 1.6rem; }
+      .gallery-grid { grid-template-columns: 1fr 1fr; }
+      .gallery-grid .photo-slot:first-child { grid-column: 1 / 3; }
+      .address-block { padding: 28px 20px; }
+    }
+
+    /* ── NO TOAST ── */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--deep); color: #fff; padding: 12px 26px; border-radius: 50px;
+      font-size: 0.88rem; z-index: 999; transition: transform 0.4s cubic-bezier(.22,1,.36,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="bg-canvas"></div>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card">
+    <div class="modal-icon">🌸</div>
+    <div class="modal-date">7 Мамыр · 2025</div>
+    <h1 class="modal-title">Отырысқа <em>келесіз бе?</em></h1>
+    <p class="modal-sub">Сізді маңызды кездесуге шақырамыз</p>
+    <div class="modal-btns" id="btnContainer">
+      <button class="btn-yes" id="btnYes">✓ &nbsp;Иә, келемін</button>
+      <button class="btn-no" id="btnNo">Жоқ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN PAGE -->
+<div id="main">
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-label">Сізді шақырамыз</p>
+    <h1 class="hero-title">7 <em>Мамыр</em><br>Отырысы</h1>
+    <p class="hero-desc" contenteditable="true">
+      Бірге жиналып, маңызды мәселелерді талқылайық. Сіздің қатысуыңыз бізге өте маңызды.
+    </p>
+    <div class="hero-badges">
+      <div class="badge"><span>📅</span> 7 Мамыр, 2025</div>
+      <div class="badge"><span>🕐</span> 14:00</div>
+      <div class="badge"><span>📍</span> Алматы</div>
+    </div>
+    <div class="scroll-hint">
+      <span>↓</span>
+      <span>Төмен</span>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="section">
+    <p class="section-label">Галерея</p>
+    <h2 class="section-title">Суреттер</h2>
+    <div class="gallery-grid" id="gallery">
+      <!-- Slots filled by JS -->
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section class="section" style="padding-top:0">
+    <p class="section-label">Жалпы ақпарат</p>
+    <h2 class="section-title">Іс-шара туралы</h2>
+    <div class="divider"></div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="ic-icon">📅</div>
+        <div class="ic-label">Күні</div>
+        <div class="ic-value" contenteditable="true">7 Мамыр, 2025</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-icon">🕐</div>
+        <div class="ic-label">Уақыты</div>
+        <div class="ic-value" contenteditable="true">14:00 — 17:00</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-icon">👔</div>
+        <div class="ic-label">Кию стилі</div>
+        <div class="ic-value" contenteditable="true">Іскери</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-icon">🗣️</div>
+        <div class="ic-label">Формат</div>
+        <div class="ic-value" contenteditable="true">Жалпы отырыс</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADDRESS -->
+  <section class="section" style="padding-top:0; padding-bottom: 100px">
+    <p class="section-label">Мекенжай</p>
+    <h2 class="section-title">Қалай табуға болады?</h2>
+    <div class="address-block">
+      <div class="address-icon">📍</div>
+      <div class="address-text">
+        <h3 contenteditable="true">Атамекен Бизнес орталығы</h3>
+        <p contenteditable="true">
+          Алматы қ., Достық даңғылы, 85<br>
+          3-қабат, 301-кабинет<br>
+          Метро: «Байқоңыр» бекеті, 5 минут жаяу
+        </p>
+        <a class="map-btn" href="https://2gis.kz/almaty" target="_blank">🗺️ &nbsp;Картада қарау</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>© 2025 · Барлығы жақсы болады &nbsp;🌸</footer>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ── NO BUTTON ESCAPE ── */
+  const btnNo = document.getElementById('btnNo');
+  const container = document.getElementById('btnContainer');
+  let escaped = 0;
+
+  const messages = [
+    '🙈 Ой, сырғып кетті...', '😅 Ұстап ал!', '🏃 Қашты!',
+    '😂 Мүмкін емес!', '✨ Мынау батырма батыр!'
+  ];
+
+  function escape(e) {
+    const rect = container.getBoundingClientRect();
+    const bw = btnNo.offsetWidth, bh = btnNo.offsetHeight;
+    const margin = 10;
+    let newX, newY;
+
+    for (let i = 0; i < 20; i++) {
+      newX = Math.random() * (rect.width - bw);
+      newY = Math.random() * (rect.height - bh);
+      const cx = (e.clientX || (rect.left + rect.width/2)) - rect.left;
+      const cy = (e.clientY || (rect.top + rect.height/2)) - rect.top;
+      const dx = Math.abs((newX + bw/2) - cx);
+      const dy = Math.abs((newY + bh/2) - cy);
+      if (dx > 60 || dy > 30) break;
+    }
+
+    // Keep within viewport
+    newX = Math.max(margin, Math.min(newX, rect.width - bw - margin));
+    newY = Math.max(margin, Math.min(newY, rect.height - bh - margin));
+
+    btnNo.style.position = 'absolute';
+    btnNo.style.left = newX + 'px';
+    btnNo.style.top  = newY + 'px';
+
+    escaped++;
+    if (escaped % 3 === 0) showToast(messages[Math.floor(Math.random() * messages.length)]);
+  }
+
+  // Make container relative and tall enough
+  container.style.position = 'relative';
+  container.style.height = '120px';
+  // Position buttons initially
+  const btnYes = document.getElementById('btnYes');
+  btnYes.style.position = 'absolute';
+  btnYes.style.left = '50%';
+  btnYes.style.top = '10px';
+  btnYes.style.transform = 'translateX(-80px)';
+  btnNo.style.position = 'absolute';
+  btnNo.style.right = '0';
+  btnNo.style.top = '10px';
+
+  btnNo.addEventListener('mouseover', escape);
+  btnNo.addEventListener('touchstart', escape, { passive: true });
+
+  /* ── YES BUTTON ── */
+  document.getElementById('btnYes').addEventListener('click', () => {
+    const modal = document.getElementById('modal');
+    const main  = document.getElementById('main');
+    modal.style.transition = 'opacity 0.7s ease';
+    modal.style.opacity = '0';
+    setTimeout(() => {
+      modal.style.display = 'none';
+      main.style.display = 'block';
+      requestAnimationFrame(() => main.classList.add('visible'));
+    }, 700);
+  });
+
+  /* ── TOAST ── */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  /* ── GALLERY ── */
+  const photoData = Array(5).fill(null); // 5 slots
+
+  function buildGallery() {
+    const grid = document.getElementById('gallery');
+    grid.innerHTML = '';
+    photoData.forEach((src, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'photo-slot';
+      slot.title = 'Суретті өзгерту үшін басыңыз';
+
+      if (src) {
+        const img = document.createElement('img');
+        img.src = src; img.alt = 'Фото ' + (i+1);
+        slot.appendChild(img);
+      } else {
+        const ph = document.createElement('div');
+        ph.className = 'photo-placeholder';
+        ph.innerHTML = `<div class="ph-icon">📷</div><div>Фото қосу</div>`;
+        slot.appendChild(ph);
+      }
+
+      const ov = document.createElement('div');
+      ov.className = 'photo-overlay';
+      ov.innerHTML = `<div class="ov-icon">📸</div><div>Ауыстыру</div>`;
+      slot.appendChild(ov);
+
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = r => { photoData[i] = r.target.result; buildGallery(); };
+        reader.readAsDataURL(file);
+      });
+      slot.appendChild(inp);
+      slot.addEventListener('click', () => inp.click());
+      grid.appendChild(slot);
+    });
+  }
+
+  buildGallery();
+
+  /* ── SCROLL REVEAL ── */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animation = 'slideUp 0.7s ease both';
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.info-card, .address-block, .gallery-grid')
+    .forEach(el => { el.style.opacity = '0'; observer.observe(el); });
+
+  // Fix opacity after animation
+  document.querySelectorAll('.info-card, .address-block, .gallery-grid').forEach(el => {
+    el.addEventListener('animationend', () => { el.style.opacity = '1'; });
+  });
+</script>
+
+</body>
+</html>
